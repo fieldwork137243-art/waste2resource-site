@@ -31,8 +31,29 @@ const CASES = [
   {id:'nsw-mine-reuse',title:'NSW mine-waste critical-mineral characterisation',location:'Regional New South Wales, Australia',region:'Asia-Pacific',material:'Tailings',commodity:'Copper, cobalt, silver, antimony and base metals',waste:'Historic tailings, waste rock and processing residues',pathway:'Metals recovery',stage:'State-wide characterisation',readiness:'Prospectivity evidence',evidence:'Geological Survey of NSW programme',lat:-32.2,lng:147.2,summary:'More than 1,200 samples from 28 mine sites and one power-station site were screened for critical minerals and high-tech metals.',technical:'High-precision chemical analysis identified elevated concentrations across sites including CSA, Great Cobar, Nymagee, Endeavour and Hillgrove; mineral deportment and recovery testing remain site-level next steps.',environmental:'Elevated concentration is not recoverability. Any secondary-mining proposal must integrate acid-generating potential, contaminated-site obligations and rehabilitation of remaining material.',detail:'A strong Australian precompetitive dataset showing how systematic characterisation can identify secondary prospectivity without overstating commercial readiness.',sources:[{label:'NSW Resources Mine Reuse Project',url:'https://www.resources.nsw.gov.au/geological-survey/projects/mine-reuse-project'}],lastReviewed:'17 September 2026'}
 ];
 
-const cards=document.querySelector('#cards'),count=document.querySelector('#result-count'),search=document.querySelector('#search'),region=document.querySelector('#region'),material=document.querySelector('#material'),pathway=document.querySelector('#pathway'),modal=document.querySelector('#detail-modal');
+const PATHWAY_META={
+  'Construction':{slug:'construction',code:'CO'},
+  'Metals recovery':{slug:'metals-recovery',code:'MR'},
+  'Backfill':{slug:'backfill',code:'BF'},
+  'Land restoration':{slug:'land-restoration',code:'LR'},
+  'Water treatment':{slug:'water-treatment',code:'WT'},
+  'Carbon mineralisation':{slug:'carbon-mineralisation',code:'CM'},
+  'Industrial materials':{slug:'industrial-materials',code:'IM'}
+};
+const REGION_ORDER=['Africa','Asia-Pacific','Europe','North America','South America'];
+const TRANSFER_QUESTIONS={
+  'Construction':'Does the site-specific residue meet durability, leaching, production-control and applicable material-specification requirements at the proposed scale?',
+  'Metals recovery':'Do grade variability, mineral deportment, recovery, reagent demand and residual-waste management support a viable site-specific flowsheet?',
+  'Backfill':'How will residue variability affect rheology, binder demand, strength development, reticulation and underground environmental controls?',
+  'Land restoration':'Will the amended material sustain vegetation while controlling erosion, pore-water quality and contaminant exposure over the required timeframe?',
+  'Water treatment':'Can treatment performance, media life, hydraulic behaviour and spent-material management be demonstrated under representative field conditions?',
+  'Carbon mineralisation':'Can additional, durable carbon uptake be measured and verified without creating unacceptable energy, water or environmental burdens?',
+  'Industrial materials':'Can feed consistency, processing demand, product durability, release behaviour and market specifications be controlled beyond laboratory batches?'
+};
+const cards=document.querySelector('#cards'),count=document.querySelector('#result-count'),search=document.querySelector('#search'),region=document.querySelector('#region'),material=document.querySelector('#material'),pathway=document.querySelector('#pathway'),modal=document.querySelector('#detail-modal'),mapPreview=document.querySelector('#map-preview'),mapTooltip=document.querySelector('#map-tooltip');
 const escapeHTML=value=>String(value).replace(/[&<>'"]/g,character=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[character]));
+const pathwayMeta=value=>PATHWAY_META[value]||{slug:String(value).toLowerCase().replace(/[^a-z]+/g,'-'),code:'RP'};
+let mapProjection=null,selectedCaseId=CASES[0]?.id||null;
 
 function showCase(id){
   const c=CASES.find(item=>item.id===id); if(!c||!modal)return;
@@ -46,15 +67,64 @@ function showCase(id){
   document.querySelector('#modal-readiness').textContent=c.readiness;
   document.querySelector('#modal-technical').textContent=c.technical;
   document.querySelector('#modal-environmental').textContent=c.environmental;
+  document.querySelector('#modal-question').textContent=TRANSFER_QUESTIONS[c.pathway]||'What site-specific evidence is still required before this precedent can support design, approval or investment decisions elsewhere?';
   document.querySelector('#modal-reviewed').textContent=c.lastReviewed;
   document.querySelector('#modal-sources').innerHTML=c.sources.map(source=>`<a href="${escapeHTML(source.url)}" target="_blank" rel="noopener">${escapeHTML(source.label)} ↗</a>`).join('');
   modal.showModal();
 }
-function visibleCases(){const q=search.value.trim().toLowerCase();return CASES.filter(c=>(!region.value||c.region===region.value)&&(!material.value||c.material===material.value)&&(!pathway.value||c.pathway===pathway.value)&&(!q||`${c.title} ${c.location} ${c.commodity} ${c.waste} ${c.pathway} ${c.stage} ${c.summary}`.toLowerCase().includes(q)))}
-function renderCards(){const visible=visibleCases();cards.innerHTML=visible.map(c=>`<article class="case-card pathway-${escapeHTML(c.pathway.toLowerCase().replace(/[^a-z]+/g,'-'))}"><div class="case-card-top"><span class="case-icon" aria-hidden="true"></span><span class="readiness-pill">${escapeHTML(c.readiness)}</span></div><span class="meta">${escapeHTML(c.location)} · ${escapeHTML(c.commodity)}</span><h2>${escapeHTML(c.title)}</h2><p>${escapeHTML(c.summary)}</p><div class="case-facts"><span>${escapeHTML(c.pathway)}</span><span>${escapeHTML(c.stage)}</span></div><button type="button" data-id="${escapeHTML(c.id)}">Open technical record →</button></article>`).join('');count.textContent=`${visible.length} case stud${visible.length===1?'y':'ies'} in view`;cards.querySelectorAll('button').forEach(button=>button.addEventListener('click',()=>showCase(button.dataset.id)));renderMapMarkers(visible)}
-let mapProjection=null;
+
+function visibleCases(){
+  const q=search.value.trim().toLowerCase();
+  return CASES.filter(c=>(!region.value||c.region===region.value)&&(!material.value||c.material===material.value)&&(!pathway.value||c.pathway===pathway.value)&&(!q||`${c.title} ${c.location} ${c.commodity} ${c.waste} ${c.pathway} ${c.stage} ${c.evidence} ${c.summary}`.toLowerCase().includes(q)));
+}
+
+function renderPathwayLegend(){
+  const legend=document.querySelector('#pathway-legend'); if(!legend)return;
+  legend.innerHTML=Object.entries(PATHWAY_META).map(([label,meta])=>{const total=CASES.filter(c=>c.pathway===label).length;return `<button type="button" class="legend-item pathway-${meta.slug}" data-pathway="${escapeHTML(label)}" aria-pressed="${pathway.value===label}"><i></i><span>${escapeHTML(label)}</span><b>${total}</b></button>`}).join('');
+  legend.querySelectorAll('button').forEach(button=>button.addEventListener('click',()=>{pathway.value=pathway.value===button.dataset.pathway?'':button.dataset.pathway;renderCards()}));
+}
+
+function renderRegionShortcuts(){
+  const shortcuts=document.querySelector('#region-shortcuts'); if(!shortcuts)return;
+  const options=[['',`All regions`,CASES.length],...REGION_ORDER.map(label=>[label,label,CASES.filter(c=>c.region===label).length])];
+  shortcuts.innerHTML=options.map(([value,label,total])=>`<button type="button" data-region="${escapeHTML(value)}" aria-pressed="${region.value===value}">${escapeHTML(label)} <b>${total}</b></button>`).join('');
+  shortcuts.querySelectorAll('button').forEach(button=>button.addEventListener('click',()=>{region.value=button.dataset.region;renderCards()}));
+}
+
+function renderCards(){
+  const visible=visibleCases();
+  cards.innerHTML=visible.map(c=>{const meta=pathwayMeta(c.pathway),sourceLabel=`${c.sources.length} source${c.sources.length===1?'':'s'}`;return `<article class="case-card pathway-${meta.slug}"><div class="case-card-top"><span class="case-icon" aria-hidden="true">${meta.code}</span><span class="readiness-pill">${escapeHTML(c.readiness)}</span></div><span class="meta">${escapeHTML(c.location)}</span><h2>${escapeHTML(c.title)}</h2><dl class="case-data"><div><dt>Residue</dt><dd>${escapeHTML(c.waste)}</dd></div><div><dt>Commodity</dt><dd>${escapeHTML(c.commodity)}</dd></div><div><dt>Evidence</dt><dd>${escapeHTML(c.evidence)}</dd></div><div><dt>Stage</dt><dd>${escapeHTML(c.stage)}</dd></div></dl><p class="case-summary">${escapeHTML(c.summary)}</p><div class="case-card-foot"><span class="pathway-label"><i></i>${escapeHTML(c.pathway)}</span><span>${sourceLabel}</span></div><button type="button" data-id="${escapeHTML(c.id)}">Open technical record →</button><small class="review-date">Reviewed ${escapeHTML(c.lastReviewed)}</small></article>`}).join('');
+  count.textContent=`${visible.length} case stud${visible.length===1?'y':'ies'} in view`;
+  cards.querySelectorAll('button').forEach(button=>button.addEventListener('click',()=>showCase(button.dataset.id)));
+  renderPathwayLegend(); renderRegionShortcuts(); renderMapMarkers(visible);
+}
+
 function projectPoint(lng,lat){return mapProjection?mapProjection([lng,lat]):[((lng+180)/360)*1200,((90-lat)/180)*600]}
-function renderMapMarkers(visible=CASES){const layer=document.querySelector('#marker-layer'),status=document.querySelector('#map-status');if(!layer){if(status)status.hidden=false;return}layer.replaceChildren();visible.forEach(c=>{const[x,y]=projectPoint(c.lng,c.lat),dot=document.createElementNS('http://www.w3.org/2000/svg','circle');dot.setAttribute('class','geo-marker');dot.setAttribute('cx',x);dot.setAttribute('cy',y);dot.setAttribute('r','7');dot.setAttribute('tabindex','0');dot.setAttribute('role','button');dot.setAttribute('aria-label',`${c.location}: ${c.title}`);dot.addEventListener('click',()=>showCase(c.id));dot.addEventListener('keydown',event=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();showCase(c.id)}});const title=document.createElementNS('http://www.w3.org/2000/svg','title');title.textContent=`${c.location} — ${c.title}`;dot.appendChild(title);layer.appendChild(dot)});if(status)status.hidden=true}
+function spreadPoint(base,placed){const collisions=placed.filter(point=>Math.hypot(point[0]-base[0],point[1]-base[1])<18).length;if(!collisions)return base;const angle=collisions*2.35,radius=10+Math.ceil(collisions/5)*5;return [base[0]+Math.cos(angle)*radius,base[1]+Math.sin(angle)*radius]}
+
+function setMapPreview(id){
+  const c=CASES.find(item=>item.id===id); if(!c||!mapPreview)return;
+  selectedCaseId=id; const meta=pathwayMeta(c.pathway);
+  mapPreview.innerHTML=`<p class="eyebrow light">Selected map record</p><span class="preview-location">${escapeHTML(c.location)} · ${escapeHTML(c.region)}</span><h2>${escapeHTML(c.title)}</h2><div class="preview-tags"><span class="pathway-${meta.slug}"><i></i>${escapeHTML(c.pathway)}</span><span>${escapeHTML(c.readiness)}</span></div><p>${escapeHTML(c.summary)}</p><dl><div><dt>Material</dt><dd>${escapeHTML(c.waste)}</dd></div><div><dt>Evidence</dt><dd>${escapeHTML(c.evidence)}</dd></div></dl><button type="button" data-preview-id="${escapeHTML(c.id)}">Open full technical record →</button>`;
+  mapPreview.querySelector('button').addEventListener('click',()=>showCase(c.id));
+  document.querySelectorAll('.geo-marker').forEach(marker=>marker.classList.toggle('selected',marker.dataset.caseId===id));
+}
+
+function showMapTooltip(c,event){
+  if(!mapTooltip)return; const map=document.querySelector('.map'),rect=map.getBoundingClientRect(),meta=pathwayMeta(c.pathway),width=230;
+  mapTooltip.innerHTML=`<b>${escapeHTML(c.title)}</b><span>${escapeHTML(c.location)}</span><small class="pathway-${meta.slug}">${escapeHTML(c.pathway)} · ${escapeHTML(c.readiness)}</small>`;
+  mapTooltip.hidden=false; const x=Math.min(Math.max(event.clientX-rect.left+14,8),Math.max(8,rect.width-width-8)),y=Math.min(Math.max(event.clientY-rect.top+14,8),Math.max(8,rect.height-92));mapTooltip.style.left=`${x}px`;mapTooltip.style.top=`${y}px`;
+}
+function hideMapTooltip(){if(mapTooltip)mapTooltip.hidden=true}
+
+function renderMapMarkers(visible=CASES){
+  const layer=document.querySelector('#marker-layer'),status=document.querySelector('#map-status');if(!layer){if(status)status.hidden=false;return}
+  layer.replaceChildren(); const placed=[];
+  visible.forEach(c=>{const meta=pathwayMeta(c.pathway),point=spreadPoint(projectPoint(c.lng,c.lat),placed);placed.push(point);const dot=document.createElementNS('http://www.w3.org/2000/svg','circle');dot.setAttribute('class',`geo-marker pathway-${meta.slug}`);dot.setAttribute('cx',point[0]);dot.setAttribute('cy',point[1]);dot.setAttribute('r','7');dot.setAttribute('tabindex','0');dot.setAttribute('role','button');dot.setAttribute('aria-label',`${c.location}: ${c.title}`);dot.dataset.caseId=c.id;dot.addEventListener('pointerenter',event=>showMapTooltip(c,event));dot.addEventListener('pointermove',event=>showMapTooltip(c,event));dot.addEventListener('pointerleave',hideMapTooltip);dot.addEventListener('focus',()=>setMapPreview(c.id));dot.addEventListener('click',()=>setMapPreview(c.id));dot.addEventListener('keydown',event=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();setMapPreview(c.id)}});const title=document.createElementNS('http://www.w3.org/2000/svg','title');title.textContent=`${c.location} — ${c.title}`;dot.appendChild(title);layer.appendChild(dot)});
+  if(!visible.length){selectedCaseId=null;if(mapPreview)mapPreview.innerHTML='<p class="eyebrow light">Selected map record</p><p class="map-preview-empty">No cases match the current filters.</p>'}else if(!visible.some(c=>c.id===selectedCaseId)){setMapPreview(visible[0].id)}else{setMapPreview(selectedCaseId)}
+  if(status)status.hidden=true;
+}
+
 if(cards&&count&&search&&region&&material&&pathway){[search,region,material,pathway].forEach(control=>control.addEventListener('input',renderCards));renderCards()}
 const modalClose=document.querySelector('#modal-close');if(modalClose&&modal){modalClose.addEventListener('click',()=>modal.close());modal.addEventListener('click',event=>{if(event.target===modal)modal.close()})}
 window.addEventListener('load',async()=>{const status=document.querySelector('#map-status'),land=document.querySelector('#land-layer');if(!land)return;if(!window.d3||!window.topojson){if(status){status.hidden=false;status.textContent='Live map data unavailable — the built-in map and case filters remain available.'}return}try{const response=await fetch('https://cdn.jsdelivr.net/npm/world-atlas@2.0.2/countries-110m.json');if(!response.ok)throw new Error('World data request failed');const topology=await response.json(),world=topojson.feature(topology,topology.objects.countries);mapProjection=d3.geoNaturalEarth1().fitExtent([[18,18],[1182,582]],world);const path=d3.geoPath(mapProjection);d3.select(land).selectAll('*').remove();d3.select(land).selectAll('path').data(world.features).join('path').attr('d',path);renderMapMarkers(visibleCases());if(status)status.hidden=true}catch(error){mapProjection=null;renderMapMarkers(visibleCases());if(status){status.hidden=false;status.textContent='Map detail unavailable — browse all cases using the markers, list and filters.'}}});
