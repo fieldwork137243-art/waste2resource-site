@@ -41,6 +41,15 @@ const PATHWAY_META={
   'Industrial materials':{slug:'industrial-materials',code:'IM'}
 };
 const REGION_ORDER=['Africa','Asia-Pacific','Europe','North America','South America'];
+const TRANSFER_QUESTIONS={
+  'Construction':'Does the site-specific residue meet durability, leaching, production-control and applicable material-specification requirements at the proposed scale?',
+  'Metals recovery':'Do grade variability, mineral deportment, recovery, reagent demand and residual-waste management support a viable site-specific flowsheet?',
+  'Backfill':'How will residue variability affect rheology, binder demand, strength development, reticulation and underground environmental controls?',
+  'Land restoration':'Will the amended material sustain vegetation while controlling erosion, pore-water quality and contaminant exposure over the required timeframe?',
+  'Water treatment':'Can treatment performance, media life, hydraulic behaviour and spent-material management be demonstrated under representative field conditions?',
+  'Carbon mineralisation':'Can additional, durable carbon uptake be measured and verified without creating unacceptable energy, water or environmental burdens?',
+  'Industrial materials':'Can feed consistency, processing demand, product durability, release behaviour and market specifications be controlled beyond laboratory batches?'
+};
 const cards=document.querySelector('#cards'),count=document.querySelector('#result-count'),search=document.querySelector('#search'),region=document.querySelector('#region'),material=document.querySelector('#material'),pathway=document.querySelector('#pathway'),modal=document.querySelector('#detail-modal'),mapPreview=document.querySelector('#map-preview'),mapTooltip=document.querySelector('#map-tooltip');
 const escapeHTML=value=>String(value).replace(/[&<>'"]/g,character=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[character]));
 const pathwayMeta=value=>PATHWAY_META[value]||{slug:String(value).toLowerCase().replace(/[^a-z]+/g,'-'),code:'RP'};
@@ -58,6 +67,7 @@ function showCase(id){
   document.querySelector('#modal-readiness').textContent=c.readiness;
   document.querySelector('#modal-technical').textContent=c.technical;
   document.querySelector('#modal-environmental').textContent=c.environmental;
+  document.querySelector('#modal-question').textContent=TRANSFER_QUESTIONS[c.pathway]||'What site-specific evidence is still required before this precedent can support design, approval or investment decisions elsewhere?';
   document.querySelector('#modal-reviewed').textContent=c.lastReviewed;
   document.querySelector('#modal-sources').innerHTML=c.sources.map(source=>`<a href="${escapeHTML(source.url)}" target="_blank" rel="noopener">${escapeHTML(source.label)} ↗</a>`).join('');
   modal.showModal();
