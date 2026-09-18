@@ -6,6 +6,7 @@
 
 /* P0 polish: platform hero, resilient evidence map and technical case cards */
 .hero-context{padding-left:17px;border-left:3px solid var(--clay);max-width:720px;font-size:14px;color:#405b53}
+.last-updated{margin:22px 0 0;color:#6f7e78;font:11px/1.6 'DM Mono',monospace;letter-spacing:.02em}
 .map{width:100%;height:auto;aspect-ratio:2/1;min-height:360px;background:linear-gradient(145deg,#b6dce6,#d2e9e7);isolation:isolate}
 .map:before{content:"";position:absolute;inset:0;background:radial-gradient(circle at 25% 20%,rgba(255,255,255,.32),transparent 28%),linear-gradient(90deg,rgba(255,255,255,.12),transparent 45%);pointer-events:none}
 .map svg{position:relative;z-index:1}.geo-grid{stroke:rgba(23,55,47,.14);stroke-width:.65}.geo-land{fill:#f2eee5;stroke:#648c7c;stroke-width:1}.geo-marker{vector-effect:non-scaling-stroke}
