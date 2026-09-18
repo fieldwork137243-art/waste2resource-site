@@ -27,15 +27,20 @@
   <section class="page-hero shell"><p class="eyebrow">Source-linked case database</p><h1>Technical Library</h1><p class="page-intro">Explore real and emerging tailings reuse, mine-waste valorisation and resource-recovery pathways. Each record separates project stage from technical promise and retains the source, engineering context, environmental questions and limits on transferability.</p><div class="page-meta"><span>30 technical cases</span><span>14 countries</span><span>7 pathway groups</span></div></section>
   <section class="content-section shell">
     <div class="controls"><input id="search" type="search" placeholder="Search projects, commodities or locations" aria-label="Search case studies"><select id="region" aria-label="Filter by region"><option value="">All regions</option><option>Africa</option><option>Asia-Pacific</option><option>Europe</option><option>North America</option><option>South America</option></select><select id="material" aria-label="Filter by material"><option value="">All materials</option><option>Tailings</option><option>Mine water</option></select><select id="pathway" aria-label="Filter by pathway"><option value="">All reuse pathways</option><option>Construction</option><option>Metals recovery</option><option>Backfill</option><option>Land restoration</option><option>Water treatment</option><option>Carbon mineralisation</option><option>Industrial materials</option></select></div>
-    <div class="map" aria-label="World map of technical case studies">
-      <div class="map-heading"><span>Global evidence map</span><small>Select a marker to open the technical record</small></div>
-      <svg id="case-map" viewBox="0 0 1200 600" preserveAspectRatio="xMidYMid meet" role="img" aria-label="World map showing technical case locations">
-        <g class="geo-grid"><path d="M0 100H1200M0 200H1200M0 300H1200M0 400H1200M0 500H1200M200 0V600M400 0V600M600 0V600M800 0V600M1000 0V600"/></g>
-        <g id="land-layer" class="geo-land" aria-hidden="true"><path d="M47 105l60-52 102 13 43 42-9 44-56 3-36 40-62-3-27 41-44-14-15-64zM191 236l52 15 18 71-22 78 30 77-22 93-58-19-9-91-55-85 22-83z"/><path d="M494 90l70-41 79 14 35 43-29 36-17 65-50 31-24-47-52-20-31-42zM579 250l61 19 35 80 43 45-17 87-67 81-48-39-6-89-36-86z"/><path d="M683 93l98-38 119 17 73 47 82 2 76 50-36 64-84-10-66 43-78-30-63 48-77-54-44-69zM888 285l58 14 46 64-23 60 31 72-49 84-63-16-34-90 14-73z"/><path d="M1009 414l94-37 86 35 11 96-48 64-105 1-65-62z"/></g>
-        <g id="marker-layer"></g>
-      </svg>
-      <p id="map-status" class="map-status" hidden>Map detail unavailable — browse cases using the list and filters.</p>
-      <span class="map-key"><i></i> Source-linked case location</span>
+    <div id="pathway-legend" class="pathway-legend" aria-label="Pathway colour legend"></div>
+    <div id="region-shortcuts" class="region-shortcuts" aria-label="Filter map by region"></div>
+    <div class="map-explorer">
+      <div class="map" aria-label="World map of technical case studies">
+        <div class="map-heading"><span>Global evidence map</span><small>Hover to inspect · select a marker for the case summary</small></div>
+        <svg id="case-map" viewBox="0 0 1200 600" preserveAspectRatio="xMidYMid meet" role="img" aria-label="World map showing technical case locations">
+          <g class="geo-grid"><path d="M0 100H1200M0 200H1200M0 300H1200M0 400H1200M0 500H1200M200 0V600M400 0V600M600 0V600M800 0V600M1000 0V600"/></g>
+          <g id="land-layer" class="geo-land" aria-hidden="true"><path d="M47 105l60-52 102 13 43 42-9 44-56 3-36 40-62-3-27 41-44-14-15-64zM191 236l52 15 18 71-22 78 30 77-22 93-58-19-9-91-55-85 22-83z"/><path d="M494 90l70-41 79 14 35 43-29 36-17 65-50 31-24-47-52-20-31-42zM579 250l61 19 35 80 43 45-17 87-67 81-48-39-6-89-36-86z"/><path d="M683 93l98-38 119 17 73 47 82 2 76 50-36 64-84-10-66 43-78-30-63 48-77-54-44-69zM888 285l58 14 46 64-23 60 31 72-49 84-63-16-34-90 14-73z"/><path d="M1009 414l94-37 86 35 11 96-48 64-105 1-65-62z"/></g>
+          <g id="marker-layer"></g>
+        </svg>
+        <div id="map-tooltip" class="map-tooltip" role="tooltip" hidden></div>
+        <p id="map-status" class="map-status" hidden>Map detail unavailable — browse cases using the list and filters.</p>
+      </div>
+      <aside id="map-preview" class="map-preview" aria-live="polite"><p class="eyebrow light">Selected map record</p><p class="map-preview-empty">Select a marker to compare its material, pathway and evidence stage.</p></aside>
     </div>
     <div class="results-meta"><span id="result-count">30 case studies in view</span><span>Stage and evidence quality are not equivalent</span></div><div id="cards" class="cards"></div>
   </section>
