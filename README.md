@@ -23,7 +23,6 @@ The sibling `work/cloudflare-pages/` folder is a deployment mirror. Do not edit 
 - `/styles.css` — shared visual system
 - `/site.js` — shared mobile navigation
 - `/library.js` — case data, filters, case URLs, citation tools, modal and map logic
-- `/contribution.js` — structured email-based case submission workflow
 - `/favicon.png` — browser icon
 - `/og-image.png` — social-sharing image
 
@@ -40,7 +39,11 @@ For this static deployment, use no build command and `/` as the output directory
 
 `case-studies-import.csv` is retained as the Airtable import/reference file. The public library currently reads curated records from `library.js`.
 
-Case suggestions are collected through the structured form on `/contact/`. The current implementation prepares an email to `hello@waste2resource.com.au` and stores no credentials in browser code. A future Airtable connection should use a Cloudflare Worker or Airtable Form endpoint so its token remains server-side; new records should enter Airtable as `Pending review`.
+Case suggestions are collected through the public Airtable form linked from `/contact/`. Each submission creates a private record in **Waste2Resource Intake → Submissions**. Nothing is published automatically.
+
+Review each submission in Airtable, check its primary source and remove confidential information before adding an accepted record to `library.js`. The public library remains a deliberately curated static dataset.
+
+This workflow uses Airtable's Free plan features: a public form, Airtable branding and manual review. It does not use paid automations, extensions or API integrations. The initial Team trial reverts to the Free plan unless the workspace is manually upgraded. The current Free plan has a 1,000-record limit per base, so export or archive reviewed submissions before that limit is reached.
 
 ## Cloudflare Web Analytics
 
