@@ -41,6 +41,7 @@ const PATHWAY_META={
   'Industrial materials':{slug:'industrial-materials',code:'IM'}
 };
 const REGION_ORDER=['Africa','Asia-Pacific','Europe','North America','South America'];
+const MATURITY_LEVELS=['Concept','Laboratory','Pilot','Demonstration','Operating'];
 const TRANSFER_QUESTIONS={
   'Construction':'Does the site-specific residue meet durability, leaching, production-control and applicable material-specification requirements at the proposed scale?',
   'Metals recovery':'Do grade variability, mineral deportment, recovery, reagent demand and residual-waste management support a viable site-specific flowsheet?',
@@ -53,6 +54,15 @@ const TRANSFER_QUESTIONS={
 const cards=document.querySelector('#cards'),count=document.querySelector('#result-count'),search=document.querySelector('#search'),region=document.querySelector('#region'),material=document.querySelector('#material'),pathway=document.querySelector('#pathway'),modal=document.querySelector('#detail-modal'),mapPreview=document.querySelector('#map-preview'),mapTooltip=document.querySelector('#map-tooltip');
 const escapeHTML=value=>String(value).replace(/[&<>'"]/g,character=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[character]));
 const pathwayMeta=value=>PATHWAY_META[value]||{slug:String(value).toLowerCase().replace(/[^a-z]+/g,'-'),code:'RP'};
+const maturityFor=caseItem=>{
+  const value=`${caseItem.stage} ${caseItem.readiness}`.toLowerCase();
+  if(/operating|commercial operation/.test(value))return 'Operating';
+  if(/demonstration|commissioned|field trial/.test(value))return 'Demonstration';
+  if(/pilot/.test(value))return 'Pilot';
+  if(/laboratory|lab feasibility/.test(value))return 'Laboratory';
+  return 'Concept';
+};
+const recordURL=id=>`${window.location.origin}/technical-library/?case=${encodeURIComponent(id)}`;
 let mapProjection=null,selectedCaseId=CASES[0]?.id||null;
 
 function showCase(id){
@@ -64,12 +74,16 @@ function showCase(id){
   document.querySelector('#modal-pathway').textContent=c.pathway;
   document.querySelector('#modal-evidence').textContent=c.evidence;
   document.querySelector('#modal-stage').textContent=c.stage;
+  document.querySelector('#modal-maturity').textContent=maturityFor(c);
   document.querySelector('#modal-readiness').textContent=c.readiness;
   document.querySelector('#modal-technical').textContent=c.technical;
   document.querySelector('#modal-environmental').textContent=c.environmental;
   document.querySelector('#modal-question').textContent=TRANSFER_QUESTIONS[c.pathway]||'What site-specific evidence is still required before this precedent can support design, approval or investment decisions elsewhere?';
   document.querySelector('#modal-reviewed').textContent=c.lastReviewed;
   document.querySelector('#modal-sources').innerHTML=c.sources.map(source=>`<a href="${escapeHTML(source.url)}" target="_blank" rel="noopener">${escapeHTML(source.label)} ↗</a>`).join('');
+  document.querySelector('#modal-citation').textContent=`Waste2Resource (${new Date().getFullYear()}). ${c.title}. Technical Library. ${recordURL(c.id)} (reviewed ${c.lastReviewed}).`;
+  document.querySelector('#report-record').href=`mailto:hello@waste2resource.com.au?subject=${encodeURIComponent(`Correction or evidence for: ${c.title}`)}&body=${encodeURIComponent(`Record: ${recordURL(c.id)}\n\nSuggested correction or additional evidence:\n`)}`;
+  const url=new URL(window.location.href);url.searchParams.set('case',c.id);history.replaceState({caseId:c.id},'',url);
   modal.showModal();
 }
 
@@ -93,7 +107,7 @@ function renderRegionShortcuts(){
 
 function renderCards(){
   const visible=visibleCases();
-  cards.innerHTML=visible.map(c=>{const meta=pathwayMeta(c.pathway),sourceLabel=`${c.sources.length} source${c.sources.length===1?'':'s'}`;return `<article class="case-card pathway-${meta.slug}"><div class="case-card-top"><span class="case-icon" aria-hidden="true">${meta.code}</span><span class="readiness-pill">${escapeHTML(c.readiness)}</span></div><span class="meta">${escapeHTML(c.location)}</span><h2>${escapeHTML(c.title)}</h2><dl class="case-data"><div><dt>Residue</dt><dd>${escapeHTML(c.waste)}</dd></div><div><dt>Commodity</dt><dd>${escapeHTML(c.commodity)}</dd></div><div><dt>Evidence</dt><dd>${escapeHTML(c.evidence)}</dd></div><div><dt>Stage</dt><dd>${escapeHTML(c.stage)}</dd></div></dl><p class="case-summary">${escapeHTML(c.summary)}</p><div class="case-card-foot"><span class="pathway-label"><i></i>${escapeHTML(c.pathway)}</span><span>${sourceLabel}</span></div><button type="button" data-id="${escapeHTML(c.id)}">Open technical record →</button><small class="review-date">Reviewed ${escapeHTML(c.lastReviewed)}</small></article>`}).join('');
+  cards.innerHTML=visible.map(c=>{const meta=pathwayMeta(c.pathway),sourceLabel=`${c.sources.length} source${c.sources.length===1?'':'s'}`,maturity=maturityFor(c);return `<article class="case-card pathway-${meta.slug}"><div class="case-card-top"><span class="case-icon" aria-hidden="true">${meta.code}</span><span class="readiness-pill">${escapeHTML(maturity)}</span></div><span class="meta">${escapeHTML(c.location)}</span><h2>${escapeHTML(c.title)}</h2><dl class="case-data"><div><dt>Residue</dt><dd>${escapeHTML(c.waste)}</dd></div><div><dt>Commodity</dt><dd>${escapeHTML(c.commodity)}</dd></div><div><dt>Evidence</dt><dd>${escapeHTML(c.evidence)}</dd></div><div><dt>Maturity</dt><dd>${escapeHTML(maturity)} · ${escapeHTML(c.stage)}</dd></div></dl><p class="case-summary">${escapeHTML(c.summary)}</p><div class="case-card-foot"><span class="pathway-label"><i></i>${escapeHTML(c.pathway)}</span><span>${sourceLabel}</span></div><button type="button" data-id="${escapeHTML(c.id)}">Open technical record →</button><small class="review-date">Published · Reviewed ${escapeHTML(c.lastReviewed)}</small></article>`}).join('');
   count.textContent=`${visible.length} case stud${visible.length===1?'y':'ies'} in view`;
   cards.querySelectorAll('button').forEach(button=>button.addEventListener('click',()=>showCase(button.dataset.id)));
   renderPathwayLegend(); renderRegionShortcuts(); renderMapMarkers(visible);
@@ -127,4 +141,7 @@ function renderMapMarkers(visible=CASES){
 
 if(cards&&count&&search&&region&&material&&pathway){[search,region,material,pathway].forEach(control=>control.addEventListener('input',renderCards));renderCards()}
 const modalClose=document.querySelector('#modal-close');if(modalClose&&modal){modalClose.addEventListener('click',()=>modal.close());modal.addEventListener('click',event=>{if(event.target===modal)modal.close()})}
+const copyRecordLink=document.querySelector('#copy-record-link');
+if(copyRecordLink){copyRecordLink.addEventListener('click',async()=>{const caseId=new URL(window.location.href).searchParams.get('case'),status=document.querySelector('#copy-status');if(!caseId)return;try{await navigator.clipboard.writeText(recordURL(caseId));status.textContent='Link copied.'}catch(error){status.textContent='Copy unavailable — use the address in your browser.'}})}
 window.addEventListener('load',async()=>{const status=document.querySelector('#map-status'),land=document.querySelector('#land-layer');if(!land)return;if(!window.d3||!window.topojson){if(status){status.hidden=false;status.textContent='Live map data unavailable — the built-in map and case filters remain available.'}return}try{const response=await fetch('https://cdn.jsdelivr.net/npm/world-atlas@2.0.2/countries-110m.json');if(!response.ok)throw new Error('World data request failed');const topology=await response.json(),world=topojson.feature(topology,topology.objects.countries);mapProjection=d3.geoNaturalEarth1().fitExtent([[18,18],[1182,582]],world);const path=d3.geoPath(mapProjection);d3.select(land).selectAll('*').remove();d3.select(land).selectAll('path').data(world.features).join('path').attr('d',path);renderMapMarkers(visibleCases());if(status)status.hidden=true}catch(error){mapProjection=null;renderMapMarkers(visibleCases());if(status){status.hidden=false;status.textContent='Map detail unavailable — browse all cases using the markers, list and filters.'}}});
+const requestedCase=new URL(window.location.href).searchParams.get('case');if(requestedCase&&CASES.some(item=>item.id===requestedCase)){setTimeout(()=>showCase(requestedCase),0)}
