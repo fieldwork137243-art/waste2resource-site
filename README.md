@@ -12,6 +12,7 @@ The sibling `work/cloudflare-pages/` folder is a deployment mirror. Do not edit 
 
 - `/` — homepage and platform positioning
 - `/technical-library/` — searchable technical case library, map and stable case links
+- `/business-case/` — mining-company benefit case, circular-economy logic and source-linked evidence
 - `/assessment-framework/` — decision path and assessment lens
 - `/research/` — research landscape and evidence ledger
 - `/field-notes/` — short technical interpretations of recurring engineering questions

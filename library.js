@@ -51,6 +51,36 @@ const TRANSFER_QUESTIONS={
   'Carbon mineralisation':'Can additional, durable carbon uptake be measured and verified without creating unacceptable energy, water or environmental burdens?',
   'Industrial materials':'Can feed consistency, processing demand, product durability, release behaviour and market specifications be controlled beyond laboratory batches?'
 };
+const BENEFIT_LENSES={
+  'Construction':{
+    value:'Potential co-product revenue, reduced demand for virgin aggregate or binder inputs, local supply and avoided tailings storage.',
+    constraints:'Product specification, consistency, processing and binder demand, customer qualification, market volume, haulage distance and residual liability.'
+  },
+  'Metals recovery':{
+    value:'Recovered metal revenue, critical-mineral supply, improved resource efficiency and possible reduction of a legacy or active tailings inventory.',
+    constraints:'Representative grade, mineral deportment, recovery, throughput, reagents, energy, CAPEX, commodity price and management of the reprocessed residue.'
+  },
+  'Backfill':{
+    value:'Reduced surface deposition, substitution for purchased fill, potential storage-capacity benefit and integration with underground support or closure.',
+    constraints:'Binder cost, rheology, pumping and reticulation, strength, production continuity, water balance and underground environmental performance.'
+  },
+  'Land restoration':{
+    value:'Closure and rehabilitation outcomes, reduced erosion or exposure, improved land use and possible avoidance of imported rehabilitation materials.',
+    constraints:'Long-term geochemistry, soil function, vegetation performance, water quality, monitoring duration and whether treatment changes the underlying liability.'
+  },
+  'Water treatment':{
+    value:'Water recovery, reduced discharge burden, compliance support and—where demonstrated—recovery of metals or useful treatment products.',
+    constraints:'Flow and chemistry variability, consumables, energy, plant reliability, sludge or spent-media management and long-term treatment obligations.'
+  },
+  'Carbon mineralisation':{
+    value:'Durable carbon removal, possible carbon value, improved residue stability and a measurable decarbonisation contribution.',
+    constraints:'Additional uptake, kinetics, measurement and verification, energy, water, land, operating integration and the permanence of storage.'
+  },
+  'Industrial materials':{
+    value:'Co-product revenue, reduced waste handling, substitution for virgin industrial feedstocks and diversified regional material supply.',
+    constraints:'Feed consistency, processing intensity, quality assurance, durability, regulated constituents, market size, logistics and customer acceptance.'
+  }
+};
 const cards=document.querySelector('#cards'),count=document.querySelector('#result-count'),search=document.querySelector('#search'),region=document.querySelector('#region'),material=document.querySelector('#material'),pathway=document.querySelector('#pathway'),modal=document.querySelector('#detail-modal'),mapPreview=document.querySelector('#map-preview'),mapTooltip=document.querySelector('#map-tooltip');
 const escapeHTML=value=>String(value).replace(/[&<>'"]/g,character=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[character]));
 const pathwayMeta=value=>PATHWAY_META[value]||{slug:String(value).toLowerCase().replace(/[^a-z]+/g,'-'),code:'RP'};
@@ -78,6 +108,9 @@ function showCase(id){
   document.querySelector('#modal-readiness').textContent=c.readiness;
   document.querySelector('#modal-technical').textContent=c.technical;
   document.querySelector('#modal-environmental').textContent=c.environmental;
+  const benefit=BENEFIT_LENSES[c.pathway]||{value:'Potential product, avoided-cost, risk-reduction or strategic value should be defined against the site baseline.',constraints:'Quantify material variability, process requirements, market demand, logistics, approvals and residual liability.'};
+  document.querySelector('#modal-benefit').textContent=benefit.value;
+  document.querySelector('#modal-benefit-constraints').textContent=benefit.constraints;
   document.querySelector('#modal-question').textContent=TRANSFER_QUESTIONS[c.pathway]||'What site-specific evidence is still required before this precedent can support design, approval or investment decisions elsewhere?';
   document.querySelector('#modal-reviewed').textContent=c.lastReviewed;
   document.querySelector('#modal-sources').innerHTML=c.sources.map(source=>`<a href="${escapeHTML(source.url)}" target="_blank" rel="noopener">${escapeHTML(source.label)} ↗</a>`).join('');
