@@ -81,7 +81,7 @@ const BENEFIT_LENSES={
     constraints:'Feed consistency, processing intensity, quality assurance, durability, regulated constituents, market size, logistics and customer acceptance.'
   }
 };
-const cards=document.querySelector('#cards'),count=document.querySelector('#result-count'),search=document.querySelector('#search'),region=document.querySelector('#region'),material=document.querySelector('#material'),pathway=document.querySelector('#pathway'),modal=document.querySelector('#detail-modal'),mapPreview=document.querySelector('#map-preview'),mapTooltip=document.querySelector('#map-tooltip');
+const cards=document.querySelector('#cards'),count=document.querySelector('#result-count'),search=document.querySelector('#search'),region=document.querySelector('#region'),material=document.querySelector('#material'),pathway=document.querySelector('#pathway'),modal=document.querySelector('#detail-modal'),mapPreview=document.querySelector('#map-preview'),mapTooltip=document.querySelector('#map-tooltip'),showMoreButton=document.querySelector('#show-more-cases'),paginationStatus=document.querySelector('#case-pagination-status');
 const escapeHTML=value=>String(value).replace(/[&<>'"]/g,character=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[character]));
 const pathwayMeta=value=>PATHWAY_META[value]||{slug:String(value).toLowerCase().replace(/[^a-z]+/g,'-'),code:'RP'};
 const maturityFor=caseItem=>{
@@ -93,7 +93,8 @@ const maturityFor=caseItem=>{
   return 'Concept';
 };
 const recordURL=id=>`${window.location.origin}/technical-library/?case=${encodeURIComponent(id)}`;
-let mapProjection=null,selectedCaseId=CASES[0]?.id||null;
+const CASE_BATCH_SIZE=9;
+let mapProjection=null,selectedCaseId=CASES[0]?.id||null,visibleLimit=CASE_BATCH_SIZE;
 
 function showCase(id){
   const c=CASES.find(item=>item.id===id); if(!c||!modal)return;
@@ -128,20 +129,23 @@ function visibleCases(){
 function renderPathwayLegend(){
   const legend=document.querySelector('#pathway-legend'); if(!legend)return;
   legend.innerHTML=Object.entries(PATHWAY_META).map(([label,meta])=>{const total=CASES.filter(c=>c.pathway===label).length;return `<button type="button" class="legend-item pathway-${meta.slug}" data-pathway="${escapeHTML(label)}" aria-pressed="${pathway.value===label}"><i></i><span>${escapeHTML(label)}</span><b>${total}</b></button>`}).join('');
-  legend.querySelectorAll('button').forEach(button=>button.addEventListener('click',()=>{pathway.value=pathway.value===button.dataset.pathway?'':button.dataset.pathway;renderCards()}));
+  legend.querySelectorAll('button').forEach(button=>button.addEventListener('click',()=>{pathway.value=pathway.value===button.dataset.pathway?'':button.dataset.pathway;visibleLimit=CASE_BATCH_SIZE;renderCards()}));
 }
 
 function renderRegionShortcuts(){
   const shortcuts=document.querySelector('#region-shortcuts'); if(!shortcuts)return;
   const options=[['',`All regions`,CASES.length],...REGION_ORDER.map(label=>[label,label,CASES.filter(c=>c.region===label).length])];
   shortcuts.innerHTML=options.map(([value,label,total])=>`<button type="button" data-region="${escapeHTML(value)}" aria-pressed="${region.value===value}">${escapeHTML(label)} <b>${total}</b></button>`).join('');
-  shortcuts.querySelectorAll('button').forEach(button=>button.addEventListener('click',()=>{region.value=button.dataset.region;renderCards()}));
+  shortcuts.querySelectorAll('button').forEach(button=>button.addEventListener('click',()=>{region.value=button.dataset.region;visibleLimit=CASE_BATCH_SIZE;renderCards()}));
 }
 
 function renderCards(){
   const visible=visibleCases();
-  cards.innerHTML=visible.map(c=>{const meta=pathwayMeta(c.pathway),sourceLabel=`${c.sources.length} source${c.sources.length===1?'':'s'}`,maturity=maturityFor(c);return `<article class="case-card pathway-${meta.slug}"><div class="case-card-top"><span class="case-icon" aria-hidden="true">${meta.code}</span></div><span class="meta">${escapeHTML(c.location)}</span><h2>${escapeHTML(c.title)}</h2><dl class="case-data"><div><dt>Residue</dt><dd>${escapeHTML(c.waste)}</dd></div><div><dt>Commodity</dt><dd>${escapeHTML(c.commodity)}</dd></div><div><dt>Evidence</dt><dd>${escapeHTML(c.evidence)}</dd></div><div><dt>Project stage</dt><dd>${escapeHTML(c.stage)}</dd></div><div><dt>Maturity</dt><dd>${escapeHTML(maturity)}</dd></div></dl><p class="case-summary">${escapeHTML(c.summary)}</p><div class="case-card-foot"><span class="pathway-label"><i></i>${escapeHTML(c.pathway)}</span><span>${sourceLabel}</span></div><button type="button" data-id="${escapeHTML(c.id)}">Open technical record →</button><small class="review-date">Published · Reviewed ${escapeHTML(c.lastReviewed)}</small></article>`}).join('');
-  count.textContent=`${visible.length} case stud${visible.length===1?'y':'ies'} in view`;
+  const displayed=visible.slice(0,visibleLimit);
+  cards.innerHTML=displayed.map(c=>{const meta=pathwayMeta(c.pathway),sourceLabel=`${c.sources.length} source${c.sources.length===1?'':'s'}`,maturity=maturityFor(c),fact=(label,value)=>`<div role="group" aria-label="${escapeHTML(label)}: ${escapeHTML(value)}."><dt aria-hidden="true">${escapeHTML(label)}:</dt><dd aria-hidden="true">${escapeHTML(value)}.</dd></div>`;return `<article class="case-card pathway-${meta.slug}"><div class="case-card-top"><span class="case-icon" aria-hidden="true">${meta.code}</span></div><span class="meta">${escapeHTML(c.location)}</span><h2>${escapeHTML(c.title)}</h2><dl class="case-data">${fact('Residue',c.waste)}${fact('Commodity',c.commodity)}${fact('Evidence',c.evidence)}${fact('Project stage',c.stage)}${fact('Maturity',maturity)}</dl><p class="case-summary">${escapeHTML(c.summary)}</p><div class="case-card-foot"><span class="pathway-label"><i></i>${escapeHTML(c.pathway)}</span><span>${sourceLabel}</span></div><button type="button" data-id="${escapeHTML(c.id)}">Open technical record →</button><small class="review-date">Published · Reviewed ${escapeHTML(c.lastReviewed)}</small></article>`}).join('');
+  count.textContent=visible.length?`Showing ${displayed.length} of ${visible.length} case stud${visible.length===1?'y':'ies'}`:'No case studies match these filters';
+  if(showMoreButton){const remaining=visible.length-displayed.length;showMoreButton.hidden=remaining<=0;showMoreButton.textContent=`Show ${Math.min(CASE_BATCH_SIZE,remaining)} more`;}
+  if(paginationStatus)paginationStatus.textContent=visible.length>displayed.length?`${visible.length-displayed.length} more cases are available in this filtered view.`:`All ${visible.length} matching case${visible.length===1?' is':'s are'} shown.`;
   cards.querySelectorAll('button').forEach(button=>button.addEventListener('click',()=>showCase(button.dataset.id)));
   renderPathwayLegend(); renderRegionShortcuts(); renderMapMarkers(visible);
 }
@@ -172,7 +176,7 @@ function renderMapMarkers(visible=CASES){
   if(status)status.hidden=true;
 }
 
-if(cards&&count&&search&&region&&material&&pathway){[search,region,material,pathway].forEach(control=>control.addEventListener('input',renderCards));renderCards()}
+if(cards&&count&&search&&region&&material&&pathway){[search,region,material,pathway].forEach(control=>control.addEventListener('input',()=>{visibleLimit=CASE_BATCH_SIZE;renderCards()}));if(showMoreButton)showMoreButton.addEventListener('click',()=>{visibleLimit+=CASE_BATCH_SIZE;renderCards();const firstNewCard=cards.children[Math.max(0,visibleLimit-CASE_BATCH_SIZE)];if(firstNewCard)firstNewCard.scrollIntoView({block:'nearest'})});renderCards()}
 const modalClose=document.querySelector('#modal-close');if(modalClose&&modal){modalClose.addEventListener('click',()=>modal.close());modal.addEventListener('click',event=>{if(event.target===modal)modal.close()})}
 const copyRecordLink=document.querySelector('#copy-record-link');
 if(copyRecordLink){copyRecordLink.addEventListener('click',async()=>{const caseId=new URL(window.location.href).searchParams.get('case'),status=document.querySelector('#copy-status');if(!caseId)return;try{await navigator.clipboard.writeText(recordURL(caseId));status.textContent='Link copied.'}catch(error){status.textContent='Copy unavailable — use the address in your browser.'}})}
