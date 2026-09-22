@@ -10,21 +10,21 @@ The sibling `work/cloudflare-pages/` folder is a deployment mirror. Do not edit 
 
 ## Website structure
 
-- `/` — homepage and platform positioning
-- `/technical-library/` — searchable technical case library, map and stable case links
-- `/business-case/` — mining-company benefit case, circular-economy logic and source-linked evidence
-- `/assessment-framework/` — decision path and assessment lens
-- `/research/` — research landscape and evidence ledger
-- `/field-notes/` — short technical interpretations of recurring engineering questions
-- `/methodology/` — inclusion criteria, maturity scale, record status and correction rules
-- `/about/` — Kartik Singh and Waste2Resource
-- `/contact/` — collaboration and structured evidence submission
-- `/404.html` — Cloudflare Pages-compatible not-found page
-- `/styles.css` — shared visual system
-- `/site.js` — shared mobile navigation
-- `/library.js` — case data, filters, case URLs, citation tools, modal and map logic
-- `/favicon.png` — browser icon
-- `/og-image.png` — social-sharing image
+- `/`: homepage and platform positioning
+- `/technical-library/`: searchable technical case library, map and stable case links
+- `/business-case/`: mining-company benefit case, circular-economy logic and source-linked evidence
+- `/assessment-framework/`: decision path and assessment lens
+- `/research/`: research landscape and evidence ledger
+- `/field-notes/`: short technical interpretations of recurring engineering questions
+- `/methodology/`: inclusion criteria, maturity scale, record status and correction rules
+- `/about/`: Kartik Singh and Waste2Resource
+- `/contact/`: collaboration and structured evidence submission
+- `/404.html`: Cloudflare Pages-compatible not-found page
+- `/styles.css`: shared visual system
+- `/site.js`: shared mobile navigation
+- `/library.js`: case data, filters, case URLs, citation tools, modal and map logic
+- `/favicon.png`: browser icon
+- `/og-image.png`: social-sharing image
 
 ## Editing and deployment
 
