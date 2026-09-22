@@ -92,7 +92,7 @@ const maturityFor=caseItem=>{
   if(/laboratory|lab feasibility/.test(value))return 'Laboratory';
   return 'Concept';
 };
-const recordURL=id=>`${window.location.origin}/technical-library/?case=${encodeURIComponent(id)}`;
+const recordURL=id=>`${window.location.origin}/technical-library/cases/${encodeURIComponent(id)}/`;
 const CASE_BATCH_SIZE=9;
 let mapProjection=null,selectedCaseId=CASES[0]?.id||null,visibleLimit=CASE_BATCH_SIZE;
 
@@ -142,7 +142,7 @@ function renderRegionShortcuts(){
 function renderCards(){
   const visible=visibleCases();
   const displayed=visible.slice(0,visibleLimit);
-  cards.innerHTML=displayed.map(c=>{const meta=pathwayMeta(c.pathway),sourceLabel=`${c.sources.length} source${c.sources.length===1?'':'s'}`,maturity=maturityFor(c),fact=(label,value)=>`<div role="group" aria-label="${escapeHTML(label)}: ${escapeHTML(value)}."><dt aria-hidden="true">${escapeHTML(label)}:</dt><dd aria-hidden="true">${escapeHTML(value)}.</dd></div>`;return `<article class="case-card pathway-${meta.slug}"><div class="case-card-top"><span class="case-icon" aria-hidden="true">${meta.code}</span></div><span class="meta">${escapeHTML(c.location)}</span><h2>${escapeHTML(c.title)}</h2><dl class="case-data">${fact('Residue',c.waste)}${fact('Commodity',c.commodity)}${fact('Evidence',c.evidence)}${fact('Project stage',c.stage)}${fact('Maturity',maturity)}</dl><p class="case-summary">${escapeHTML(c.summary)}</p><div class="case-card-foot"><span class="pathway-label"><i></i>${escapeHTML(c.pathway)}</span><span>${sourceLabel}</span></div><button type="button" data-id="${escapeHTML(c.id)}">Open technical record →</button><small class="review-date">Published · Reviewed ${escapeHTML(c.lastReviewed)}</small></article>`}).join('');
+  cards.innerHTML=displayed.map(c=>{const meta=pathwayMeta(c.pathway),sourceLabel=`${c.sources.length} source${c.sources.length===1?'':'s'}`,maturity=maturityFor(c),fact=(label,value)=>`<div role="group" aria-label="${escapeHTML(label)}: ${escapeHTML(value)}."><dt aria-hidden="true">${escapeHTML(label)}:</dt><dd aria-hidden="true">${escapeHTML(value)}.</dd></div>`;return `<article class="case-card pathway-${meta.slug}"><div class="case-card-top"><span class="case-icon" aria-hidden="true">${meta.code}</span></div><span class="meta">${escapeHTML(c.location)}</span><h2><a href="/technical-library/cases/${encodeURIComponent(c.id)}/">${escapeHTML(c.title)}</a></h2><dl class="case-data">${fact('Residue',c.waste)}${fact('Commodity',c.commodity)}${fact('Evidence',c.evidence)}${fact('Project stage',c.stage)}${fact('Maturity',maturity)}</dl><p class="case-summary">${escapeHTML(c.summary)}</p><div class="case-card-foot"><span class="pathway-label"><i></i>${escapeHTML(c.pathway)}</span><span>${sourceLabel}</span></div><button type="button" data-id="${escapeHTML(c.id)}">Quick view →</button><small class="review-date">Published · Reviewed ${escapeHTML(c.lastReviewed)}</small></article>`}).join('');
   count.textContent=visible.length?`Showing ${displayed.length} of ${visible.length} case stud${visible.length===1?'y':'ies'}`:'No case studies match these filters';
   if(showMoreButton){const remaining=visible.length-displayed.length;showMoreButton.hidden=remaining<=0;showMoreButton.textContent=`Show ${Math.min(CASE_BATCH_SIZE,remaining)} more`;}
   if(paginationStatus)paginationStatus.textContent=visible.length>displayed.length?`${visible.length-displayed.length} more cases are available in this filtered view.`:`All ${visible.length} matching case${visible.length===1?' is':'s are'} shown.`;
